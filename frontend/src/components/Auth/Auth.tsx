@@ -41,7 +41,7 @@ const Auth: React.FC<IAuthProps> = ({ session, reloadSession }) => {
   };
   return (
     <div>
-      <Center height="100vh" border="1px solid red">
+      <Center height="100vh">
         <Stack align="center" spacing={8}>
           {session ? (
             <>
@@ -51,7 +51,7 @@ const Auth: React.FC<IAuthProps> = ({ session, reloadSession }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               ></Input>
-              <Button width="100%" onClick={onSubmit}>
+              <Button width="100%" onClick={onSubmit} isLoading={loading}>
                 Save
               </Button>
             </>
