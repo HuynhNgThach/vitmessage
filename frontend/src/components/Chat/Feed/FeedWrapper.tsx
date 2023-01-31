@@ -3,6 +3,8 @@ import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import React from "react";
 import MessageHeader from "./Messages/Header";
+import MessageInput from "./Messages/Input";
+import Messages from "./Messages/Messages";
 
 type Props = {
   session: Session;
@@ -26,9 +28,10 @@ const FeedWrapper: React.FC<Props> = ({ session }) => {
           justify="space-between"
           overflow="hidden"
           flexGrow={1}
-          border="1px solid red"
         >
           <MessageHeader userId={userId} conversationId={conversationId} />
+          <Messages conversationId={conversationId} userId={userId} />
+          <MessageInput conversationId={conversationId} session={session} />
         </Flex>
       ) : (
         <div>No conversation selected</div>
