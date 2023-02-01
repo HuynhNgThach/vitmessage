@@ -123,11 +123,11 @@ const resolvers = {
         console.timeEnd("end doSomething");
 
         pubsub.publish("MESSAGE_SENT", { messageSent: newMessage });
-        //pubsub.publish("CONVERSATION_UPDATED", {
-        //  conversationUpdated: {
-        //    conversation,
-        //  },
-        //});
+        pubsub.publish("CONVERSATION_UPDATED", {
+          conversationUpdated: {
+            conversation,
+          },
+        });
       } catch (error: any) {
         console.log("Sent message error", error.message);
         throw new GraphQLError("Sent message error");
@@ -147,6 +147,11 @@ const resolvers = {
           args: { conversationId: string },
           context: GraphQlContext
         ) => {
+          console.log(
+            "RESOLVER SUBSCRIPT",
+            payload.messageSent.conversationId,
+            args.conversationId
+          );
           return payload.messageSent.conversationId === args.conversationId;
         }
       ),

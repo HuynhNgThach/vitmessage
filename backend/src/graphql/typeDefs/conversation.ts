@@ -5,11 +5,24 @@ const typeDefs = gql`
   type Mutation {
     createConversation(participantIds: [String]): ConversationResponse
   }
+  type Mutation {
+    markConversationAsRead(conversationId: String, userId: String): Boolean
+  }
+  type Mutation {
+    deleteConversation(conversationId: String): Boolean
+  }
   type ConversationResponse {
     conversationId: String
   }
   type Query {
     conversations: [Conversation]
+  }
+  type ConversationUpdatedSubscriptionPayload {
+    conversation: Conversation
+  }
+  type ConversationDeletedPayload {
+    id: String
+    latestMessageId: String
   }
   type Conversation {
     id: String
@@ -18,6 +31,7 @@ const typeDefs = gql`
     createdAt: Date
     updatedAt: Date
   }
+
   type Participant {
     id: String
     user: User
@@ -25,6 +39,12 @@ const typeDefs = gql`
   }
   type Subscription {
     conversationCreated: Conversation
+  }
+  type Subscription {
+    conversationUpdated: ConversationUpdatedSubscriptionPayload
+  }
+  type Subscription {
+    conversationDeleted: ConversationDeletedPayload
   }
 `;
 export default typeDefs;

@@ -2,12 +2,21 @@ import { Box } from "@chakra-ui/react";
 import { Session } from "next-auth";
 import ConversationList from "./ConversationList";
 import ConversationOp from "../../../graphql/operations/conversation";
-import { useQuery } from "@apollo/client";
-import { ConversationsData } from "@/utils/types";
-import { ConversationPopulated } from "../../../../../backend/src/utils/types";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
+import {
+  ConversationDeletedData,
+  ConversationsData,
+  ConversationUpdatedData,
+} from "@/utils/types";
+import {
+  ConversationPopulated,
+  ParticipantPopulated,
+} from "../../../../../backend/src/utils/types";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import SkeletonLoader from "@/common/SkeletonLoader";
+import conversationOp from "../../../graphql/operations/conversation";
+import { gql } from "@apollo/client";
 
 interface ConversationWrapperProps {
   session: Session;
@@ -16,20 +25,161 @@ interface ConversationWrapperProps {
 const ConversationWrapper: React.FC<ConversationWrapperProps> = ({
   session,
 }) => {
+  const router = useRouter();
+  const {
+    query: { conversationId },
+  } = router;
   const {
     data: conversationData,
     error: conversationError,
     loading: conversationLoading,
     subscribeToMore,
   } = useQuery<ConversationsData, null>(ConversationOp.Queries.conversations);
-  const router = useRouter();
+
+  const [markConversationAsRead] = useMutation<
+    { markConversationAsRead: boolean },
+    { userId: string; conversationId: string }
+  >(conversationOp.Mutations.markConversationAsRead);
+
+  useSubscription<ConversationUpdatedData, null>(
+    conversationOp.Subscriptions.conversationUpdated,
+    {
+      onData: ({ client, data }) => {
+        const { data: subscriptionData } = data;
+        console.log("On data firing", subscriptionData);
+        if (!subscriptionData) return;
+        const {
+          conversationUpdated: { conversation: updatedConversation },
+        } = subscriptionData;
+        const currViewConversation = updatedConversation.id === conversationId;
+        currViewConversation && onViewConversation(conversationId, false);
+      },
+    }
+  );
+  useSubscription<ConversationDeletedData, null>(
+    conversationOp.Subscriptions.conversationDeleted,
+    {
+      onData: ({ client, data }) => {
+        console.log("on sub", data);
+
+        const { data: subscriptionData } = data;
+        if (!subscriptionData) return;
+        const existing = client.readQuery<ConversationsData>({
+          query: conversationOp.Queries.conversations,
+        });
+        if (!existing) return;
+        const { conversations } = existing;
+
+        const {
+          conversationDeleted: { id: deletedConversationId },
+        } = subscriptionData;
+        client.writeQuery<ConversationsData>({
+          query: conversationOp.Queries.conversations,
+          data: {
+            conversations: conversations.filter(
+              (c) => c.id !== deletedConversationId
+            ),
+          },
+        });
+        router.push("/");
+      },
+    }
+  );
+
   const {
-    query: { conversationId },
-  } = router;
-  const onViewConversation = async (conversationId: string) => {
-    //1. Push the conversationId to router query params
+    user: { id: userId },
+  } = session;
+
+  const onViewConversation = async (
+    conversationId: string,
+    hasSeenLatestMessage: boolean
+  ) => {
     router.push({ query: { conversationId } });
-    //2. Mark the conversation as read
+
+    /**
+     * Only mark as read if conversation is unread
+     */
+    if (hasSeenLatestMessage) return;
+
+    try {
+      await markConversationAsRead({
+        variables: {
+          userId,
+          conversationId,
+        },
+        optimisticResponse: {
+          markConversationAsRead: true,
+        },
+        update: (cache) => {
+          /**
+           * Get conversation participants
+           * from cache
+           */
+          const participantsFragment = cache.readFragment<{
+            participants: Array<ParticipantPopulated>;
+          }>({
+            id: `Conversation:${conversationId}`,
+            fragment: gql`
+              fragment Participants on Conversation {
+                participants {
+                  user {
+                    id
+                    username
+                  }
+                  hasSeenLatestMessage
+                }
+              }
+            `,
+          });
+
+          if (!participantsFragment) return;
+
+          /**
+           * Create copy to
+           * allow mutation
+           */
+          const participants = [...participantsFragment.participants];
+
+          const userParticipantIdx = participants.findIndex(
+            (p) => p.user.id === userId
+          );
+
+          /**
+           * Should always be found
+           * but just in case
+           */
+          if (userParticipantIdx === -1) return;
+
+          const userParticipant = participants[userParticipantIdx];
+
+          /**
+           * Update user to show latest
+           * message as read
+           */
+          participants[userParticipantIdx] = {
+            ...userParticipant,
+            hasSeenLatestMessage: true,
+          };
+
+          /**
+           * Update cache
+           */
+          cache.writeFragment({
+            id: `Conversation:${conversationId}`,
+            fragment: gql`
+              fragment UpdatedParticipants on Conversation {
+                participants
+              }
+            `,
+            data: {
+              participants,
+            },
+          });
+        },
+      });
+    } catch (error) {
+      console.log("onViewConversation error", error);
+    }
   };
   const subscribeToMoreConversation = () => {
     subscribeToMore({

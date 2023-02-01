@@ -35,6 +35,16 @@ export interface CreateConversationInput {
 export interface ConversationsData {
   conversations: Array<ConversationPopulated>;
 }
+export interface ConversationUpdatedData {
+  conversationUpdated: {
+    conversation: ConversationPopulated;
+  };
+}
+export interface ConversationDeletedData {
+  conversationDeleted: {
+    id: string;
+  };
+}
 
 export interface MessagesData {
   messages: Array<MessagePopulated>;

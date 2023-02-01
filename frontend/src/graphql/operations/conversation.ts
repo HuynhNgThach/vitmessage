@@ -34,12 +34,42 @@ const conversationOp = {
         }
       }
     `,
+    markConversationAsRead: gql`
+      mutation MarkConversationAsRead(
+        $conversationId: String
+        $userId: String
+      ) {
+        markConversationAsRead(conversationId: $conversationId, userId: $userId)
+      }
+    `,
+    deleteConversation: gql`
+      mutation DeleteConversation($conversationId: String) {
+        deleteConversation(conversationId: $conversationId)
+      }
+    `,
   },
   Subscriptions: {
     conversationCreated: gql`
-      subscription ConversationCreated{
+      subscription ConversationCreated {
         conversationCreated {
           ${conversationFields}
+        }
+      }
+    `,
+    conversationUpdated: gql`
+      subscription ConversationUpdated {
+        conversationUpdated {
+          conversation {
+            ${conversationFields}
+          }
+        }
+      }
+    `,
+    conversationDeleted: gql`
+      subscription ConversationDeleted {
+        conversationDeleted {
+          id
+          latestMessageId
         }
       }
     `,

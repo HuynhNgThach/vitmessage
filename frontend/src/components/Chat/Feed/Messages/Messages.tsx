@@ -5,7 +5,7 @@ import {
   MessagesVariables,
 } from "@/utils/types";
 import { useQuery } from "@apollo/client";
-import { Flex, Stack } from "@chakra-ui/react";
+import { Flex, Stack, Button } from "@chakra-ui/react";
 import React, { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import SkeletonLoader from "@/common/SkeletonLoader";
@@ -17,20 +17,21 @@ interface Props {
 }
 
 const Messages: React.FC<Props> = ({ conversationId, userId }) => {
-  const { data, loading, error, subscribeToMore } = useQuery<
+  const { data, loading, error, subscribeToMore, refetch } = useQuery<
     MessagesData,
     MessagesVariables
   >(messageOp.Queries.messages, {
     variables: {
       conversationId,
     },
+    //pollInterval: 500,
     onError: ({ message }) => {
       toast.error(message);
     },
   });
 
   const subscribeToMoreMessages = (conversationId: string) => {
-    subscribeToMore({
+    return subscribeToMore({
       document: messageOp.Subscriptions.messageSent,
       variables: {
         conversationId,
@@ -46,12 +47,15 @@ const Messages: React.FC<Props> = ({ conversationId, userId }) => {
             newMessage.sender.id === userId
               ? prev.messages
               : [newMessage, ...prev.messages],
+          //[newMessage, ...prev.messages],
         });
       },
     });
   };
   useEffect(() => {
-    subscribeToMoreMessages(conversationId);
+    const unsubscribe = subscribeToMoreMessages(conversationId);
+
+    return () => unsubscribe();
   }, [conversationId]);
   if (error) return null;
 
@@ -63,15 +67,17 @@ const Messages: React.FC<Props> = ({ conversationId, userId }) => {
         </Stack>
       )}
       {data?.messages && (
-        <Flex direction="column-reverse" overflowY="scroll" height="100%">
-          {data.messages.map((mess) => (
-            <MessageItem
-              key={mess.id}
-              message={mess}
-              sentByMe={mess.sender.id === userId}
-            />
-          ))}
-        </Flex>
+        <>
+          <Flex direction="column-reverse" overflowY="scroll" height="100%">
+            {data.messages.map((mess) => (
+              <MessageItem
+                key={mess.id}
+                message={mess}
+                sentByMe={mess.sender.id === userId}
+              />
+            ))}
+          </Flex>
+        </>
       )}
     </Flex>
   );

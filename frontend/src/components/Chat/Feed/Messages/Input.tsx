@@ -31,6 +31,7 @@ const MessageInput: React.FC<MessageProps> = ({ session, conversationId }) => {
         conversationId,
         body: messageBody,
       };
+      setMessageBody("");
       const { data, errors } = await sendMessage({
         variables: {
           ...newMessage,
@@ -43,11 +44,13 @@ const MessageInput: React.FC<MessageProps> = ({ session, conversationId }) => {
             query: messageOp.Queries.messages,
             variables: { conversationId },
           }) as MessagesData;
+          console.log("EXISTING CACHE", existing);
+
           cache.writeQuery<MessagesData, { conversationId: string }>({
             query: messageOp.Queries.messages,
             variables: { conversationId },
             data: {
-              ...existing,
+              //...existing,
               messages: [
                 {
                   id: messageId,
