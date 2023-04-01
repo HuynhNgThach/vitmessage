@@ -1,4 +1,4 @@
-import { ParticipantPopulated } from "../../../backend/src/utils/types";
+import { ParticipantPopulated } from "../utils/types";
 
 export const formatUsernames = (
   participants: Array<ParticipantPopulated>,

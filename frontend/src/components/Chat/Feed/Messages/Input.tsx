@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useMutation } from "@apollo/client";
 import messageOp from "@/graphql/operations/message";
-import { SendMessageArguments } from "../../../../../../backend/src/utils/types";
+import { SendMessageArguments } from "../../../../utils/types";
 import { ObjectID } from "bson";
 import { MessagesData } from "@/utils/types";
 

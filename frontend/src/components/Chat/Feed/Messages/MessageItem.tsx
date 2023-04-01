@@ -2,7 +2,7 @@ import { Avatar, Box, Flex, Stack, Text } from "@chakra-ui/react";
 import { formatRelative } from "date-fns";
 import { enUS } from "date-fns/locale";
 import React from "react";
-import { MessagePopulated } from "../../../../../../backend/src/utils/types";
+import { MessagePopulated } from "../../../../utils/types";
 
 interface Props {
   message: MessagePopulated;

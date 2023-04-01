@@ -1,7 +1,4 @@
-import {
-  ConversationPopulated,
-  MessagePopulated,
-} from "../../../backend/src/utils/types";
+import { Prisma } from "@prisma/client";
 
 export interface CreateUsernameData {
   createUsername: {
@@ -11,6 +8,12 @@ export interface CreateUsernameData {
 }
 export interface CreateUsernameVariable {
   username: string;
+}
+export interface SendMessageArguments {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
 }
 
 export interface SearchUsersData {
@@ -59,3 +62,54 @@ export interface MessageSubscriptionData {
     };
   };
 }
+export interface MessageSentSubscriptionPayload {
+  messageSent: MessagePopulated;
+}
+
+export const messagePopulated = Prisma.validator<Prisma.MessageInclude>()({
+  sender: {
+    select: {
+      id: true,
+      username: true,
+    },
+  },
+});
+export type MessagePopulated = Prisma.MessageGetPayload<{
+  include: typeof messagePopulated;
+}>;
+export interface ConversationCreatedSubscriptionPayload {
+  conversationCreated: ConversationPopulated;
+}
+export type ConversationPopulated = Prisma.ConversationGetPayload<{
+  include: typeof conversationPopulated;
+}>;
+
+export type ParticipantPopulated = Prisma.ConversationParticipantGetPayload<{
+  include: typeof participantPopulated;
+}>;
+export const participantPopulated =
+  Prisma.validator<Prisma.ConversationParticipantInclude>()({
+    user: {
+      select: {
+        id: true,
+        username: true,
+      },
+    },
+  });
+
+export const conversationPopulated =
+  Prisma.validator<Prisma.ConversationInclude>()({
+    participants: {
+      include: participantPopulated,
+    },
+    latestMessage: {
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+    },
+  });
