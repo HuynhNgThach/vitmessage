@@ -6,18 +6,61 @@ services:
     ports:
       - "8080:3000"
     environment:
-      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_URL=http://chat.thachhn.com/
       - NEXTAUTH_SECRET=LmeBhHktDOo9g0e5UHy+9z32d7ZBr39B6eD5+3YexOc=
-      - GOOGLE_CLIENT_ID=449735722944-rkc898mbc066fml17q1giiib8ogjhem6.apps.googleusercontent.com
-      - GOOGLE_CLIENT_SECRET=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
-      - MONGODB_URI=mongodb://127.0.0.1:27021/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
-
+      - GOOGLE_CLIENT_ID=282539326242-au74bp1m1irbimrkt62uj5kjdldebk3l.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - MONGODB_URI=mongodb://mongo1:27017/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
+    networks:
+      - mongors-network
   backend:
     image: farmfarm/vit-mess:be
     ports:
       - "3000:3000"
       - "4000:4000"
     environment:
-      - CLIENT_ORIGIN=http://localhost:3000
-      - MONGODB_URI=mongodb://127.0.0.1:27021/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
-      - NEXTAUTH_URL=http://localhost:3000
+      - CLIENT_ORIGIN=http://chat.thachhn.com/
+      - MONGODB_URI=mongodb://mongo1:27017/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
+      - NEXTAUTH_URL=http://chat.thachhn.com/
+    networks:
+      - mongors-network
+  mongo1:
+    container_name: mongo1
+    image: mongo:latest
+    volumes:
+      - ~/mongors/data1:/data/db
+      - ./rs-init.sh:/scripts/rs-init.sh
+    networks:
+      - mongors-network
+    ports:
+      - 27021:27017
+    links:
+      - mongo2
+      - mongo3
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+  mongo2:
+    container_name: mongo2
+    image: mongo:latest
+    volumes:
+      - ~/mongors/data2:/data/db
+    networks:
+      - mongors-network
+    ports:
+      - 27022:27017
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+  mongo3:
+    container_name: mongo3
+    image: mongo:latest
+    volumes:
+      - ~/mongors/data3:/data/db
+    networks:
+      - mongors-network
+    ports:
+      - 27023:27017
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+networks:
+  mongors-network:
+    driver: bridge
