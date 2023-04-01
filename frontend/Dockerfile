@@ -1,14 +1,14 @@
 FROM node:lts as dependencies
 WORKDIR /my-project
 COPY package.json package-lock.json ./
-RUN yarn install --frozen-lockfile
+RUN npm install --frozen-lockfile
 
 FROM node:lts as builder
 WORKDIR /my-project
 COPY . .
 COPY --from=dependencies /my-project/node_modules ./node_modules
 RUN npx prisma generate --schema=./src/prisma/schema.prisma
-RUN NODE_ENV=production yarn build
+RUN NODE_ENV=production npm run build
 
 FROM node:lts as runner
 WORKDIR /my-project
@@ -22,4 +22,4 @@ COPY --from=builder /my-project/package.json ./package.json
 COPY --from=builder /my-project/.env.production ./
 
 EXPOSE 3000
-CMD ["yarn", "start"]
+CMD ["npm","run", "start"]
