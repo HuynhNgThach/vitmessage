@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: farmfarm/vit-mess:latest
+    ports:
+      - "8080:3000"
+    environment:
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=LmeBhHktDOo9g0e5UHy+9z32d7ZBr39B6eD5+3YexOc=
+      - GOOGLE_CLIENT_ID=449735722944-rkc898mbc066fml17q1giiib8ogjhem6.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - MONGODB_URI=mongodb://127.0.0.1:27021/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
+
+  backend:
+    image: farmfarm/vit-mess:be
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    environment:
+      - CLIENT_ORIGIN=http://localhost:3000
+      - MONGODB_URI=mongodb://127.0.0.1:27021/vitmessage?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.2
+      - NEXTAUTH_URL=http://localhost:3000
