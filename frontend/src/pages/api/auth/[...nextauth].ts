@@ -11,7 +11,7 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: "LmeBhHktDOo9g0e5UHy+9z32d7ZBr39B6eD5+3YexOc=",
   callbacks: {
     session({ session, user }) {
       return { ...session, user: { ...session.user, ...user } };

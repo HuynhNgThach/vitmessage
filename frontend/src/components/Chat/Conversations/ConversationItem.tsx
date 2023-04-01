@@ -16,6 +16,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import { BiLogOut } from "react-icons/bi";
 import { AiOutlineEdit } from "react-icons/ai";
 import { formatUsernames } from "../../../utils/functions";
+//import { ConversationPopulated } from "backend/src/utils/types";
 import { ConversationPopulated } from "../../../../../backend/src/utils/types";
 
 const formatRelativeLocale = {
@@ -98,27 +99,6 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           >
             Delete
           </MenuItem>
-          {/* {conversation.participants.length > 2 ? (
-            <MenuItem
-              icon={<BiLogOut fontSize={20} />}
-              onClick={(event) => {
-                event.stopPropagation();
-                // onLeaveConversation(conversation);
-              }}
-            >
-              Leave
-            </MenuItem>
-          ) : (
-            <MenuItem
-              icon={<MdDeleteOutline fontSize={20} />}
-              onClick={(event) => {
-                event.stopPropagation();
-                // onDeleteConversation(conversation.id);
-              }}
-            >
-              Delete
-            </MenuItem>
-          )} */}
         </MenuList>
       </Menu>
       <Flex position="absolute" left="-6px">

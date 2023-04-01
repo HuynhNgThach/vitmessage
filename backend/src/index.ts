@@ -116,6 +116,8 @@ const main = async () => {
   await new Promise<void>((resolve) =>
     httpServer.listen({ port: PORT }, resolve)
   );
+  console.log("process env", process.env.MONGODB_URI);
+
   console.log(`Server is now running on http://localhost:${PORT}/graphql`);
 };
 

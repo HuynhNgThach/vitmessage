@@ -60,6 +60,8 @@ const resolvers = {
       args: SendMessageArguments,
       context: GraphQlContext
     ): Promise<boolean> => {
+      console.log("hit send");
+
       const { session, prisma, pubsub } = context;
       if (!session?.user) throw new GraphQLError("Not Authorized!");
 
@@ -80,54 +82,57 @@ const resolvers = {
           },
           include: messagePopulated,
         });
-        console.log(`Do query participant with ${userId}   ${conversationId}`);
 
-        const participant = await prisma.conversationParticipant.findFirst({
-          where: {
-            userId,
-            conversationId,
-          },
-        });
-        console.log("here is new message", participant);
-        if (!participant) throw new GraphQLError("Participant does not exist");
-        //update conversation entity
-        const conversation = await prisma.conversation.update({
-          where: {
-            id: conversationId,
-          },
-          data: {
-            latestMessageId: newMessage.id,
-            participants: {
-              update: {
-                where: {
-                  id: participant.id,
-                },
-                data: {
-                  hasSeenLatestMessage: true,
-                },
-              },
-              updateMany: {
-                where: {
-                  NOT: {
-                    userId,
-                  },
-                },
-                data: {
-                  hasSeenLatestMessage: false,
-                },
-              },
-            },
-          },
-          include: conversationPopulated,
-        });
-        console.timeEnd("end doSomething");
+        //const participant = await prisma.conversationParticipant.findFirst({
+        //  where: {
+        //    userId,
+        //    conversationId,
+        //  },
+        //});
+        //if (!participant) throw new GraphQLError("Participant does not exist");
+        ////update conversation entity
+        //const conversation = await prisma.conversation.update({
+        //  where: {
+        //    id: conversationId,
+        //  },
+        //  data: {
+        //    latestMessageId: newMessage.id,
+        //    participants: {
+        //      update: {
+        //        where: {
+        //          id: participant.id,
+        //        },
+        //        data: {
+        //          hasSeenLatestMessage: true,
+        //        },
+        //      },
+        //      updateMany: {
+        //        where: {
+        //          NOT: {
+        //            userId,
+        //          },
+        //        },
+        //        data: {
+        //          hasSeenLatestMessage: false,
+        //        },
+        //      },
+        //    },
+        //  },
+        //  include: conversationPopulated,
+        //});
+        console.timeEnd("doSomething");
+        console.time("emit");
+        //console.log("new mess ", newMessage);
 
-        pubsub.publish("MESSAGE_SENT", { messageSent: newMessage });
-        pubsub.publish("CONVERSATION_UPDATED", {
-          conversationUpdated: {
-            conversation,
-          },
+        pubsub.publish("MESSAGE_SENT", {
+          messageSent: newMessage,
         });
+        //pubsub.publish("CONVERSATION_UPDATED", {
+        //  conversationUpdated: {
+        //    conversation,
+        //  },
+        //});
+        console.timeEnd("emit");
       } catch (error: any) {
         console.log("Sent message error", error.message);
         throw new GraphQLError("Sent message error");
@@ -147,11 +152,6 @@ const resolvers = {
           args: { conversationId: string },
           context: GraphQlContext
         ) => {
-          console.log(
-            "RESOLVER SUBSCRIPT",
-            payload.messageSent.conversationId,
-            args.conversationId
-          );
           return payload.messageSent.conversationId === args.conversationId;
         }
       ),
