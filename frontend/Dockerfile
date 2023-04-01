@@ -7,6 +7,7 @@ FROM node:lts as builder
 WORKDIR /my-project
 COPY . .
 COPY --from=dependencies /my-project/node_modules ./node_modules
+RUN npx prisma generate --schema=./src/prisma/schema.prisma
 RUN NODE_ENV=production yarn build
 
 FROM node:lts as runner
